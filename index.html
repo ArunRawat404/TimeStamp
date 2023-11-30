@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.7/video-js.min.css" rel="stylesheet" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.7/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@3.8.0/dist/videojs-contrib-eme.js"></script>
+
+    <title>Test VideJS DRM</title>
+
+    <style>
+        #timestamps {
+            display: flex;
+            border: 1px solid black;
+            padding: 2px;
+            /* justify-content: space-between; */
+        }
+
+        /* Style for timestamp links */
+        .timestamp-link {
+            text-decoration: none;
+            color: orange;
+            cursor: pointer;
+            margin-right: 20px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div style="margin: 50px auto;">
+        <video id="my-video" class="video-js"></video>
+    </div>
+
+    <div id="timestamps"></div>
+
+    <script>
+
+        // Array of timestamps and descriptions
+        const timestamps = [
+            { time: 10, description: "Description 1" },
+            { time: 30, description: "Description 2" },
+            { time: 50, description: "Description 3" },
+            { time: 70, description: "Description 4" },
+            { time: 90, description: "Description 5" }
+        ];
+
+        // Get video element and timestamps container
+        const video = document.getElementById('my-video');
+        const timestampsContainer = document.getElementById('timestamps');
+
+        var player = videojs(
+            'my-video',
+            {
+                controls: true,
+                fluid: true,
+                html5: {
+                    vhs: {
+                        overrideNative: true
+                    }
+                }
+            },
+            function () {
+                var player = this;
+                player.eme();
+                player.src({
+                    src: 'https://cdn.bitmovin.com/content/assets/art-of-motion_drm/mpds/11331.mpd',
+                    type: 'application/dash+xml',
+                    keySystems: {
+                        'com.widevine.alpha': 'https://cwip-shaka-proxy.appspot.com/no_auth',
+                    }
+                });
+
+
+                player.ready(function () {
+
+                    function scrollToSegment() {
+                        timestamps.forEach(timestamp => {
+                            const link = document.createElement('a');
+                            link.classList.add('timestamp-link');
+                            link.textContent = `${timestamp.description}`;
+
+                            const description = document.createElement('p');
+
+                            link.addEventListener('click', () => {
+                                video.currentTime = timestamp.time;
+                            });
+
+                            timestampsContainer.appendChild(link);
+                        });
+                    }
+
+                    player.tech(true).on('keystatuschange', function (event) {
+                        console.log("event: ", event);
+
+                    });
+
+
+                    console.log("Working")
+                    scrollToSegment();
+
+                });
+            }
+
+        );
+
+    </script>
+
+</body>
+
+</html>
